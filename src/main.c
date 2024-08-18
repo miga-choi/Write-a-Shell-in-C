@@ -1,11 +1,46 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#define SH_REAR_LINE_BUFFER_SIZE 1024
+
 /**
  * @brief Read a line of input from stdin.
  * @return The line from stdin.
  */
 char *sh_read_line() {
+    int buffer_size = SH_REAR_LINE_BUFFER_SIZE;
+    int position = 0;
+    char *buffer = malloc(sizeof(char) * buffer_size);
+    int c;
+
+    if (!buffer) {
+        fprintf(stderr, "sh: allocation error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while (1) {
+        // Read a character
+        c = getchar();
+
+        // If we hit EOF, replace it with a null character and return.
+        if (c == EOF || c == '\n') {
+            buffer[position] = '\0';
+            return buffer;
+        } else {
+            buffer[position] = c;
+        }
+        position++;
+
+        // If we have exceeded the buffer, reallocate.
+        if (position >= buffer_size) {
+            buffer_size += SH_REAR_LINE_BUFFER_SIZE;
+            buffer = realloc(buffer, buffer_size);
+            if (!buffer) {
+                fprintf(stderr, "sh: allocation error\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
 }
 
 /**
@@ -35,8 +70,14 @@ void sh_loop() {
 
     do {
         printf("> ");
+
+        // Read the command from standard input.
         line = sh_read_line();
+
+        // Separate the command string into a program and arguments.
         args = sh_split_line(line);
+
+        // Run the parsed command.
         status = sh_execute(args);
 
         free(line);
