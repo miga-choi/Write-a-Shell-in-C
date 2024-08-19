@@ -1,5 +1,46 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define SH_TOKEN_BUFFER_SIZE 64
+#define SH_TOKEN_DELIMITER " \t\r\n\a"
+
+/**
+ * @brief Split a line into tokens (very naively).
+ * @param line The line.
+ * @return Null-terminated array of tokens.
+ */
+char **sh_split_line(char *line) {
+    int buffer_size = SH_TOKEN_BUFFER_SIZE, position = 0;
+    char **tokens = malloc(buffer_size * sizeof(char *));
+    char *token;
+
+    if (!tokens) {
+        fprintf(stderr, "sh: allocation error\n");
+        exit(EXIT_FAILURE);
+    }
+
+    token = strtok(line, SH_TOKEN_DELIMITER);
+
+    while (token != NULL) {
+        tokens[position] = token;
+        position++;
+
+        if (position >= buffer_size) {
+            buffer_size += SH_TOKEN_BUFFER_SIZE;
+            tokens = realloc(tokens, buffer_size * sizeof(char *));
+            if (!tokens) {
+                fprintf(stderr, "sh: allocation error\n");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        token = strtok(NULL, SH_TOKEN_DELIMITER);
+    }
+
+    tokens[position] = NULL;
+    return tokens;
+}
 
 #define SH_REAR_LINE_BUFFER_SIZE 1024
 
@@ -22,7 +63,7 @@ char *sh_read_line() {
         // Read a character
         c = getchar();
 
-        // If we hit EOF, replace it with a null character and return.
+        // If we hit EOF(End of File), replace it with a null character and return.
         if (c == EOF || c == '\n') {
             buffer[position] = '\0';
             return buffer;
@@ -42,15 +83,6 @@ char *sh_read_line() {
         }
     }
 }
-
-/**
- * @brief Split a line into tokens (very naively).
- * @param line The line.
- * @return Null-terminated array of tokens.
- */
-char **sh_split_line(char *line) {
-}
-
 
 /**
  * @brief Execute shell built-in or launch program.
