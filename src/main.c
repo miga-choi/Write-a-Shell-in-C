@@ -48,7 +48,7 @@ char **sh_split_line(char *line) {
  * @brief Read a line of input from stdin.
  * @return The line from stdin.
  */
-char *sh_read_line() {
+char *sh_read_line(void) {
     int buffer_size = SH_REAR_LINE_BUFFER_SIZE;
     int position = 0;
     char *buffer = malloc(sizeof(char) * buffer_size);
@@ -83,6 +83,22 @@ char *sh_read_line() {
         }
     }
 }
+
+//char *sh_read_line(void) {
+//    char *line = NULL;
+//    ssize_t buffer_size = 0; // have getline allocate a buffer for us
+//
+//    if (getline(&line, &buffer_size, stdin) == -1) {
+//        if (feof(stdin)) {
+//            exit(EXIT_SUCCESS); // We recieved an EOF
+//        } else {
+//            perror("readline");
+//            exit(EXIT_FAILURE);
+//        }
+//    }
+//
+//    return line;
+//}
 
 /**
  * @brief Execute shell built-in or launch program.
