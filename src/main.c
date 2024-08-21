@@ -170,14 +170,29 @@ char **sh_split_line(char *line) {
     return tokens;
 }
 
-#define SH_REAR_LINE_BUFFER_SIZE 1024
+
+#define SH_READ_LINE_BUFFER_SIZE 1024
 
 /**
  * @brief Read a line of input from stdin.
  * @return The line from stdin.
  */
-char *sh_read_line(void) {
-    int buffer_size = SH_REAR_LINE_BUFFER_SIZE;
+char *sh_read_line() {
+#ifdef SH_USE_STD_GETLINE
+    char *line = NULL;
+    ssize_t buffer_size = 0; // have getline allocate a buffer for us
+    if (getline(&line, &buffer_size, stdin) == -1) {
+        if (feof(stdin)) {
+            exit(EXIT_SUCCESS); // We received an EOF
+        } else {
+            perror("sh: getline\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    return line;
+#else
+#define SH_READ_LINE_BUFFER_SIZE 1024
+    int buffer_size = SH_READ_LINE_BUFFER_SIZE;
     int position = 0;
     char *buffer = malloc(sizeof(char) * buffer_size);
     int c;
@@ -191,8 +206,9 @@ char *sh_read_line(void) {
         // Read a character
         c = getchar();
 
-        // If we hit EOF(End of File), replace it with a null character and return.
-        if (c == EOF || c == '\n') {
+        if (c == EOF) {
+            exit(EXIT_SUCCESS);
+        } else if (c == '\n') {
             buffer[position] = '\0';
             return buffer;
         } else {
@@ -202,7 +218,7 @@ char *sh_read_line(void) {
 
         // If we have exceeded the buffer, reallocate.
         if (position >= buffer_size) {
-            buffer_size += SH_REAR_LINE_BUFFER_SIZE;
+            buffer_size += SH_READ_LINE_BUFFER_SIZE;
             buffer = realloc(buffer, buffer_size);
             if (!buffer) {
                 fprintf(stderr, "sh: allocation error\n");
@@ -210,6 +226,7 @@ char *sh_read_line(void) {
             }
         }
     }
+#endif
 }
 
 /**
