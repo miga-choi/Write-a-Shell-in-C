@@ -28,7 +28,6 @@ int (*builtin_func[])(char **) = {
         &sh_exit
 };
 
-
 int sh_num_builtins() {
     return sizeof(builtin_str) / sizeof(char *);
 }
@@ -107,6 +106,28 @@ int sh_launch(char **args) {
     }
 
     return 1;
+}
+
+/**
+ * @brief Execute shell built-in or launch program.
+ * @param args Null terminated list of arguments.
+ * @return 1 if the shell should continue running, 0 if it should terminate
+ */
+int sh_execute(char **args) {
+    int i;
+
+    if (args[0] == NULL) {
+        // An empty command was entered.
+        return 1;
+    }
+
+    for (i = 0; i < sh_num_builtins(); i++) {
+        if (strcmp(args[0], builtin_str[i]) == 0) {
+            return (*builtin_func[i])(args);
+        }
+    }
+
+    return sh_launch(args);
 }
 
 #define SH_TOKEN_BUFFER_SIZE 64
@@ -189,15 +210,6 @@ char *sh_read_line(void) {
             }
         }
     }
-}
-
-
-/**
- * @brief Execute shell built-in or launch program.
- * @param args Null terminated list of arguments.
- * @return 1 if the shell should continue running, 0 if it should terminate
- */
-int sh_execute(char **args) {
 }
 
 /**
